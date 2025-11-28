@@ -1,199 +1,261 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, TrendingUp, TrendingDown, Users, DollarSign, Target, Twitter, Linkedin, Search } from "lucide-react"
-import { auth } from "@/lib/auth"
+"use client"
 
-export default async function DashboardPage() {
-  const session = await auth()
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Sparkles, Copy, Check, Twitter, Linkedin, Users, Zap, RefreshCw } from "lucide-react"
+
+interface PromotionKit {
+  twitterPosts: { content: string; type: string }[]
+  linkedinPost: { content: string }
+  crossPromoPitch: { subject: string; body: string }
+  twitterAd?: { tweet: string; headline: string }
+}
+
+export default function DashboardPage() {
+  const [newsletterName, setNewsletterName] = useState("")
+  const [newsletterDescription, setNewsletterDescription] = useState("")
+  const [niche, setNiche] = useState("")
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [promotionKit, setPromotionKit] = useState<PromotionKit | null>(null)
+  const [copiedItem, setCopiedItem] = useState<string | null>(null)
+
+  async function generateKit() {
+    if (!newsletterName || !newsletterDescription) return
+
+    setIsGenerating(true)
+
+    try {
+      const res = await fetch("/api/generate-promotion-kit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newsletterName, newsletterDescription, niche }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setPromotionKit(data.kit)
+      }
+    } catch (err) {
+      console.error("Failed to generate kit:", err)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  function copyToClipboard(text: string, id: string) {
+    navigator.clipboard.writeText(text)
+    setCopiedItem(id)
+    setTimeout(() => setCopiedItem(null), 2000)
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Welcome back, {session?.user?.name?.split(" ")[0]}</h1>
-          <p className="text-muted-foreground">Here's how your newsletter is performing</p>
-        </div>
-        <Button asChild>
-          <Link href="/campaigns/new">
-            <Plus className="h-4 w-4 mr-2" />
-            New Campaign
-          </Link>
-        </Button>
+    <div className="max-w-4xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">Weekly Promotion Kit</h1>
+        <p className="text-muted-foreground">
+          Generate a week's worth of promotion content in seconds. Copy, paste, post.
+        </p>
       </div>
 
-      {/* Overview Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Subscribers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12,450</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <TrendingUp className="h-3 w-3 text-green-500" />
-              <span className="text-green-500">+8%</span> vs last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+1,234</div>
-            <div className="w-full bg-muted rounded-full h-2 mt-2">
-              <div className="bg-primary h-2 rounded-full" style={{ width: "72%" }} />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">72% of monthly goal</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg CPA</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$1.45</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <TrendingDown className="h-3 w-3 text-green-500" />
-              <span className="text-green-500">-15%</span> vs last month
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Channel Breakdown */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Twitter</CardTitle>
-            <Twitter className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">456 subs</div>
-            <p className="text-xs text-muted-foreground">$1.20 CPA</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">LinkedIn</CardTitle>
-            <Linkedin className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">234 subs</div>
-            <p className="text-xs text-muted-foreground">$2.10 CPA</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">SEO</CardTitle>
-            <Search className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">544 subs</div>
-            <p className="text-xs text-muted-foreground">Free (organic)</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Active Campaigns */}
+      {/* Newsletter Info */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Active Campaigns</CardTitle>
-            <CardDescription>Your currently running campaigns</CardDescription>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/campaigns">View All</Link>
-          </Button>
+        <CardHeader>
+          <CardTitle>Your Newsletter</CardTitle>
+          <CardDescription>
+            Tell us about your newsletter to generate personalized content
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-4">
-                <Twitter className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">Summer Launch</p>
-                  <p className="text-sm text-muted-foreground">Twitter Ads</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-8 text-sm">
-                <div className="text-center">
-                  <p className="font-medium">234</p>
-                  <p className="text-muted-foreground">Subs</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">$1.12</p>
-                  <p className="text-muted-foreground">CPA</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">$262</p>
-                  <p className="text-muted-foreground">Spent</p>
-                </div>
-                <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
-                  Active
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-4">
-                <Linkedin className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">Tech Founders</p>
-                  <p className="text-sm text-muted-foreground">LinkedIn Ads</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-8 text-sm">
-                <div className="text-center">
-                  <p className="font-medium">89</p>
-                  <p className="text-muted-foreground">Subs</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">$2.34</p>
-                  <p className="text-muted-foreground">CPA</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">$208</p>
-                  <p className="text-muted-foreground">Spent</p>
-                </div>
-                <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
-                  Active
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-4">
-                <Search className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">Best AI Tools 2024</p>
-                  <p className="text-sm text-muted-foreground">SEO Landing Page</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-8 text-sm">
-                <div className="text-center">
-                  <p className="font-medium">156</p>
-                  <p className="text-muted-foreground">Subs</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">-</p>
-                  <p className="text-muted-foreground">CPA</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">-</p>
-                  <p className="text-muted-foreground">Spent</p>
-                </div>
-                <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
-                  Live
-                </span>
-              </div>
-            </div>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Newsletter Name</Label>
+            <Input
+              id="name"
+              placeholder="e.g., The Morning Brew"
+              value={newsletterName}
+              onChange={(e) => setNewsletterName(e.target.value)}
+            />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">What's it about? (1-2 sentences)</Label>
+            <Input
+              id="description"
+              placeholder="e.g., Daily business news for busy professionals, delivered in 5 minutes"
+              value={newsletterDescription}
+              onChange={(e) => setNewsletterDescription(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="niche">Niche/Industry</Label>
+            <Input
+              id="niche"
+              placeholder="e.g., Tech, Finance, Marketing, Health"
+              value={niche}
+              onChange={(e) => setNiche(e.target.value)}
+            />
+          </div>
+          <Button
+            onClick={generateKit}
+            disabled={!newsletterName || !newsletterDescription || isGenerating}
+            className="w-full"
+            size="lg"
+          >
+            {isGenerating ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Generating your kit...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Generate This Week's Content
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
+
+      {/* Generated Kit */}
+      {promotionKit && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Your Promotion Kit</h2>
+            <p className="text-sm text-muted-foreground">Hover & click to copy</p>
+          </div>
+
+          {/* Twitter Posts */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Twitter className="h-5 w-5 text-slate-600" />
+                <CardTitle className="text-lg">Twitter/X Posts</CardTitle>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">FREE</span>
+              </div>
+              <CardDescription>Post these throughout the week</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {promotionKit.twitterPosts.map((post, i) => (
+                <div key={i} className="relative group">
+                  <div className="p-4 bg-muted/50 rounded-lg border hover:border-primary/50 transition-colors cursor-pointer"
+                       onClick={() => copyToClipboard(post.content, `twitter-${i}`)}>
+                    <p className="text-sm pr-10">{post.content}</p>
+                    <p className="text-xs text-muted-foreground mt-2">{post.type}</p>
+                  </div>
+                  <div className="absolute top-3 right-3 p-2">
+                    {copiedItem === `twitter-${i}` ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* LinkedIn Post */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Linkedin className="h-5 w-5 text-sky-600" />
+                <CardTitle className="text-lg">LinkedIn Post</CardTitle>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">FREE</span>
+              </div>
+              <CardDescription>Professional tone for LinkedIn</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative group">
+                <div className="p-4 bg-muted/50 rounded-lg border hover:border-primary/50 transition-colors cursor-pointer"
+                     onClick={() => copyToClipboard(promotionKit.linkedinPost.content, "linkedin")}>
+                  <p className="text-sm pr-10 whitespace-pre-wrap">{promotionKit.linkedinPost.content}</p>
+                </div>
+                <div className="absolute top-3 right-3 p-2">
+                  {copiedItem === "linkedin" ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cross-Promo Pitch */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange-500" />
+                <CardTitle className="text-lg">Cross-Promo Pitch</CardTitle>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">FREE</span>
+              </div>
+              <CardDescription>DM this to similar newsletters to exchange mentions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative group">
+                <div className="p-4 bg-muted/50 rounded-lg border hover:border-primary/50 transition-colors cursor-pointer"
+                     onClick={() => copyToClipboard(
+                       `Subject: ${promotionKit.crossPromoPitch.subject}\n\n${promotionKit.crossPromoPitch.body}`,
+                       "crosspromo"
+                     )}>
+                  <p className="text-xs text-muted-foreground mb-1">Subject:</p>
+                  <p className="text-sm font-medium mb-3">{promotionKit.crossPromoPitch.subject}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Message:</p>
+                  <p className="text-sm whitespace-pre-wrap">{promotionKit.crossPromoPitch.body}</p>
+                </div>
+                <div className="absolute top-3 right-3 p-2">
+                  {copiedItem === "crosspromo" ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Twitter Ad (Optional) */}
+          {promotionKit.twitterAd && (
+            <Card className="border-dashed border-amber-300">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-amber-500" />
+                  <CardTitle className="text-lg">Twitter Ad</CardTitle>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PAID - Optional</span>
+                </div>
+                <CardDescription>Boost growth with $20-50/week if you want faster results</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative group">
+                  <div className="p-4 bg-amber-50/50 rounded-lg border border-amber-200 hover:border-amber-400 transition-colors cursor-pointer"
+                       onClick={() => copyToClipboard(promotionKit.twitterAd!.tweet, "twitterad")}>
+                    <p className="text-xs text-muted-foreground mb-1">Tweet:</p>
+                    <p className="text-sm mb-3">{promotionKit.twitterAd.tweet}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Card Headline:</p>
+                    <p className="text-sm font-medium">{promotionKit.twitterAd.headline}</p>
+                  </div>
+                  <div className="absolute top-3 right-3 p-2">
+                    {copiedItem === "twitterad" ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Regenerate */}
+          <div className="text-center pt-4">
+            <Button variant="outline" onClick={generateKit} disabled={isGenerating}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? "animate-spin" : ""}`} />
+              Generate Fresh Content
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
