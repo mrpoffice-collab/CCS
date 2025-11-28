@@ -11,6 +11,8 @@ function getOpenAI() {
 interface PromotionKit {
   twitterPosts: { content: string; type: string }[]
   linkedinPost: { content: string }
+  redditPost: { title: string; body: string; subredditTips: string }
+  pinterestPin: { title: string; description: string; boardIdea: string }
   crossPromoPitch: { subject: string; body: string }
   twitterAd?: { tweet: string; headline: string }
 }
@@ -36,6 +38,16 @@ function getDemoPromotionKit(newsletterName: string, niche: string): PromotionKi
     ],
     linkedinPost: {
       content: `I started ${newsletterName} because I was tired of sifting through noise to find signal in ${nicheText}.\n\nEvery week, I spend hours researching so you don't have to.\n\nThe result? A 5-minute read that gives you:\n→ The most important ${nicheText} updates\n→ Actionable insights you can use immediately\n→ Trends to watch (before everyone else catches on)\n\nIt's free. No spam. Unsubscribe anytime.\n\nJoin 1,000+ readers who start their week smarter.\n\n🔗 Link in comments`
+    },
+    redditPost: {
+      title: `I curate ${nicheText} insights so you don't have to - free newsletter`,
+      body: `Hey everyone,\n\nI've been running ${newsletterName} for a while now. It's a free weekly newsletter where I break down the most important ${nicheText} news and trends.\n\nWhat you get:\n- 5-minute read, once a week\n- No fluff, just actionable insights\n- Completely free\n\nI started it because I was spending hours every week reading through everything, and figured others might benefit from a curated version.\n\nHappy to answer any questions! Link in my profile if interested.`,
+      subredditTips: `Try subreddits related to ${nicheText}. Look for ones that allow self-promotion on specific days, or contribute value first before sharing.`
+    },
+    pinterestPin: {
+      title: `${newsletterName}: Your Weekly ${nicheText} Update`,
+      description: `Get the best ${nicheText} insights delivered to your inbox every week. ${newsletterName} saves you hours of research with curated, actionable content. Subscribe free and join thousands of readers! #newsletter #${nicheText.replace(/\s+/g, '')} #productivity`,
+      boardIdea: `Create a board called "${nicheText} Tips & Resources" and pin valuable content alongside your newsletter pins for better reach.`
     },
     crossPromoPitch: {
       subject: `Cross-promo? ${newsletterName} x Your Newsletter`,
@@ -101,6 +113,16 @@ Generate the following in JSON format:
   "linkedinPost": {
     "content": "..." (longer form, professional tone, use line breaks and bullet points)
   },
+  "redditPost": {
+    "title": "..." (engaging but not clickbaity, Reddit hates obvious self-promo),
+    "body": "..." (value-first approach, mention newsletter naturally, offer to help),
+    "subredditTips": "..." (suggest 2-3 relevant subreddits and posting strategy)
+  },
+  "pinterestPin": {
+    "title": "..." (under 100 chars, keyword-rich),
+    "description": "..." (under 500 chars, include hashtags),
+    "boardIdea": "..." (suggest a board name and strategy)
+  },
   "crossPromoPitch": {
     "subject": "...",
     "body": "..." (friendly DM/email to send to other newsletter creators)
@@ -115,6 +137,8 @@ Requirements:
 - Twitter posts should be under 280 characters each
 - Each Twitter post should have a different angle/type
 - LinkedIn post should be 150-300 words, use emojis sparingly
+- Reddit post should be authentic and value-first (Redditors hate obvious ads)
+- Pinterest pin should be SEO-optimized with relevant hashtags
 - Cross-promo pitch should be friendly but professional
 - Twitter ad should be punchy and direct`
 
